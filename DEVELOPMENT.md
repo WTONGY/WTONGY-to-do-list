@@ -13,7 +13,7 @@
 
 ```bash
 # 1. 克隆仓库
-git clone <repo-url>
+git clone https://github.com/WTONGY/WTONGY-to-do-list.git
 cd 极简Todo
 
 # 2. 直接运行
