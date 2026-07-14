@@ -42,7 +42,7 @@ jobs:
       - name: Upload DMG artifact
         uses: actions/upload-artifact@v4
         with:
-          name: 极简Todo-macOS
+          name: JJTodo-macOS
           path: 极简Todo-macOS.dmg
 
   build-windows:
@@ -61,12 +61,13 @@ jobs:
       - name: Build exe
         run: |
           pyinstaller --onefile --windowed --name="极简Todo" --icon="assets/极简Todo.ico" todo_app.py
+          copy dist\极简Todo.exe dist\JJTodo-Windows.exe
 
       - name: Upload exe artifact
         uses: actions/upload-artifact@v4
         with:
-          name: 极简Todo-Windows
-          path: dist/极简Todo.exe
+          name: JJTodo-Windows
+          path: dist/JJTodo-Windows.exe
 
   release:
     needs: [build-macos, build-windows]
@@ -74,24 +75,26 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+
       - name: Download macOS artifact
         uses: actions/download-artifact@v4
         with:
-          name: 极简Todo-macOS
+          name: JJTodo-macOS
 
       - name: Download Windows artifact
         uses: actions/download-artifact@v4
         with:
-          name: 极简Todo-Windows
+          name: JJTodo-Windows
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: 极简Todo - Latest
+          name: 极简Todo - 最新版
           tag_name: v1.0.0
           files: |
             极简Todo-macOS.dmg
-            极简Todo.exe
+            JJTodo-Windows.exe
           draft: false
           prerelease: false
         env:
