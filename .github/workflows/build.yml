@@ -1,0 +1,98 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+
+      - name: Build .app bundle
+        run: |
+          pyinstaller \
+            --windowed \
+            --name="极简Todo" \
+            --icon="assets/极简Todo.icns" \
+            --add-data="assets/极简Todo.icns:." \
+            todo_app.py
+
+      - name: Create DMG
+        run: |
+          mkdir -p dmg_src
+          cp -R dist/极简Todo.app dmg_src/
+          hdiutil create \
+            -volname "极简Todo" \
+            -srcfolder dmg_src \
+            -ov \
+            -format UDZO \
+            极简Todo-macOS.dmg
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 极简Todo-macOS
+          path: 极简Todo-macOS.dmg
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+
+      - name: Build exe
+        run: |
+          pyinstaller --onefile --windowed --name="极简Todo" --icon="assets/极简Todo.ico" todo_app.py
+
+      - name: Upload exe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 极简Todo-Windows
+          path: dist/极简Todo.exe
+
+  release:
+    needs: [build-macos, build-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: 极简Todo-macOS
+
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: 极简Todo-Windows
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: 极简Todo - Latest
+          tag_name: v1.0.0
+          files: |
+            极简Todo-macOS.dmg
+            极简Todo.exe
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
